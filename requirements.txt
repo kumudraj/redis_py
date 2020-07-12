@@ -1,0 +1,6 @@
+aiohttp==3.6.2
+aiohttp-swagger==1.0.14
+async-timeout==3.0.1
+redis==3.5.3
+hiredis==1.0.1
+ksuid==1.3

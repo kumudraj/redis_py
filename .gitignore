@@ -1,0 +1,14 @@
+venv/
+.idea/
+*/*.bin
+*/*/__pycache__/
+*/*/*/__pycache__/
+*/*/*/*/__pycache__/
+./logs/*
+*/logs/*
+*.pyc
+*.egg
+build/*
+*.egg-info
+*.log
+git_push.bat

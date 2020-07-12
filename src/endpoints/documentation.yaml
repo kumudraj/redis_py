@@ -1,0 +1,106 @@
+swagger: "2.0"
+info:
+  description: |
+    API Description
+  version: 2.0
+  title: Apis
+basePath: /redis_poc
+securityDefinitions:
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: swagger_auth
+schemes:
+  - http
+  - https
+
+paths:
+  /ping:
+    get:
+      tags:
+        - Bot related operations.
+      description: This Api will check the status of the server.
+      produces:
+        - application / json
+      security:
+        - ApiKeyAuth: []
+
+
+  /set_value:
+    post:
+      tags:
+        - Bot related operations.
+      description: This Api will save data in redis.
+      produces:
+        - application / json
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/set_value"
+
+  /get_value:
+    post:
+      tags:
+        - Bot related operations.
+      description: This Api will get data from redis.
+      produces:
+        - application / json
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/get_value"
+
+  /publish_message:
+    post:
+      tags:
+        - Bot related operations.
+      description: This Api will get data from redis.
+      produces:
+        - application / json
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/publish_message"
+
+
+definitions:
+  set_value:
+    type: object
+    properties:
+      data:
+        required: True
+        default: 'abcd'
+        type: string
+        description: 'data need to save in redis'
+
+  get_value:
+    type: object
+    properties:
+      id:
+        required: True
+        default: 'abcd'
+        type: string
+        description: 'id for which data will fetch'
+
+  publish_message:
+    type: object
+    properties:
+      message:
+        required: True
+        default: 'abcd'
+        type: string
+        description: 'id for which data will fetch'
+
+
