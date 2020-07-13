@@ -3,12 +3,13 @@ import json
 import os
 import sys
 import threading
+import time
 
 import redis
 from ksuid import ksuid
 
 from src.config_reader.config_module import ConfigModule
-from src.loggingmodule.logging_module import LoggingModule, ERROR, error_logging, info_msg, DEBUG
+from src.loggingmodule.logging_module import LoggingModule, ERROR, error_logging, DEBUG, info_msg, INFO
 from src.services.singleton import Singleton
 
 config_obj = ConfigModule("common_config")
@@ -58,6 +59,18 @@ class RPCServer:
         except:
             logger_object.log_message(ERROR, error_logging(sys.exc_info()))
 
+    def pool_reconnect(self):
+        try:
+            self.redis_client.connection_pool.disconnect()
+        except:
+            logger_object.log_message(ERROR, error_logging(sys.exc_info()))
+
+        try:
+            self.redis_client = redis.StrictRedis(connection_pool=self.get_redis_pool(self.db))
+            self.redis_subscribe = self.get_redis_subscribe()
+        except:
+            logger_object.log_message(ERROR, error_logging(sys.exc_info()))
+
     def get_rerdis_connection(self):
         return redis.StrictRedis(host=redis_host, port=redis_port, decode_responses=True)
 
@@ -89,8 +102,21 @@ class RPCServer:
 
     def publish_message(self, pub_dict):
         try:
+            start = time.time()
+            self.redis_client.pubsub()
+            self.redis_client.publish(reload_channel(), str("Ping"))
+            done = time.time()
+            publish_duration = done - start
+            if (publish_duration) > 7:
+                logger_object.log_message(DEBUG,
+                                          info_msg(msg="publish_duration:{0} sec.".format(publish_duration),
+                                                   source=inspect.currentframe()))
+                self.pool_reconnect()
             self.redis_client.pubsub()
             self.redis_client.publish(reload_channel(), str(pub_dict))
+            logger_object.log_message(INFO,
+                                      info_msg(msg="publish msg:{0}".format(pub_dict),
+                                               source=inspect.currentframe()))
             return True
         except:
             logger_object.log_message(ERROR, error_logging(sys.exc_info()))
@@ -169,7 +195,7 @@ redis_obj = RPCServer(redis_db)
 def create_redis_msg_queue():
     try:
         message = redis_obj.get_redis_message()
-        if message:
+        if message and message.get('data') != 'Ping':
             print("got message:", message.get('data'))
             message = json.loads(message.get("data").replace('\'', '"'))
             queue_obj.enqueue(message)
