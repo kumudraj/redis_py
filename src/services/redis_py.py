@@ -138,10 +138,10 @@ class RPCServer:
 
     def get_redis_message(self):
         try:
-            if not self.redis_subscribe:  #### after restart redis manually, self.redis_subscribe was null  error recived {'Type': 'AttributeError', 'Msg': AttributeError("'NoneType' object has no attribute 'get_message'")
+            if not self.redis_subscribe:  #### after restart redis, self.redis_subscribe was null  error recived {'Type': 'AttributeError', 'Msg': AttributeError("'NoneType' object has no attribute 'get_message'")
                 self.redis_subscribe = self.get_redis_subscribe()
-            self.redis_subscribe.check_health()
-            health_check_response = ", ".join(self.redis_subscribe.health_check_response)
+            # self.redis_subscribe.check_health()
+            # health_check_response = ", ".join(self.redis_subscribe.health_check_response)
             # logger_object.log_message(DEBUG,
             #                           info_msg(msg="pub_sub health:{0}".format(health_check_response),
             #                                    source=inspect.currentframe()))
@@ -196,13 +196,15 @@ def create_redis_msg_queue():
     try:
         message = redis_obj.get_redis_message()
         if message and message.get('data') != 'Ping':
-            print("got message:", message.get('data'))
             message = json.loads(message.get("data").replace('\'', '"'))
+            logger_object.log_message(INFO,
+                                      info_msg(msg="pub_sub health:{0}".format(message),
+                                               source=inspect.currentframe()))
             queue_obj.enqueue(message)
     except:
         logger_object.log_message(ERROR, error_logging(sys.exc_info()))
     finally:
-        threading.Timer(2.0, create_redis_msg_queue).start()
+        threading.Timer(1.0, create_redis_msg_queue).start()
 
 
 create_redis_msg_queue()
